@@ -307,7 +307,7 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: const LinearGradient(colors: [AppColors.primaryEmerald, Color(0xFF115E56)]),
+                            gradient: LinearGradient(colors: [AppColors.primaryEmerald, const Color(0xFF115E56)]),
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.primaryEmerald.withValues(alpha: 0.35),
@@ -326,7 +326,7 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
                                   value: progress,
                                   strokeWidth: 6,
                                   backgroundColor: Colors.white.withValues(alpha: 0.15),
-                                  valueColor: const AlwaysStoppedAnimation(AppColors.goldAccent),
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.goldAccent),
                                 ),
                               ),
                               Column(

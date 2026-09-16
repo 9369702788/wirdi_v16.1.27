@@ -210,8 +210,10 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
           // direction consistent no matter what language the rest of
           // the app's UI is in.
           if (_continuousScroll) {
-            return Directionality(
-              textDirection: TextDirection.rtl,
+            return SafeArea(
+              bottom: true,
+              child: Directionality(
+                textDirection: TextDirection.rtl,
               child: ListView.builder(
                 controller: _continuousScrollController,
                 // BUGFIX: this physics line existed on PageView.builder below
@@ -235,11 +237,14 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
                   );
                 },
               ),
+              ),
             );
           }
 
-          return Directionality(
-            textDirection: TextDirection.rtl,
+          return SafeArea(
+            bottom: true,
+            child: Directionality(
+              textDirection: TextDirection.rtl,
             child: PageView.builder(
               controller: _pageController,
               physics: _multiTouchActive ? const NeverScrollableScrollPhysics() : const PageScrollPhysics(),
@@ -262,6 +267,7 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
                   },
                 );
               },
+            ),
             ),
           );
         },
@@ -542,7 +548,7 @@ class _MushafPageViewState extends State<_MushafPageView> {
       onPointerCancel: _handlePointerUp,
       child: LayoutBuilder(
       builder: (context, constraints) {
-        final verticalMargin = 12.0 + 20.0 + MediaQuery.of(context).padding.bottom;
+        final verticalMargin = 0.0;
         // BUGFIX: in continuous-scroll mode this widget lives inside a
         // ListView.builder item slot, which gives LayoutBuilder an
         // UNBOUNDED (infinite) constraints.maxHeight -- that produced an
@@ -562,7 +568,7 @@ class _MushafPageViewState extends State<_MushafPageView> {
         // unchanged, so swipe-to-turn-page keeps working exactly as
         // before. Only 2-finger pinch/zoom gestures are captured here.
         final pageCard = Container(
-          margin: EdgeInsets.fromLTRB(14, 12, 14, 20 + MediaQuery.of(context).padding.bottom),
+          margin: const EdgeInsets.symmetric(horizontal: 8),
           padding: const EdgeInsets.all(22),
           constraints: widget.targetHeight != null
               // Continuous-scroll mode: NO maxHeight cap -- let the card grow

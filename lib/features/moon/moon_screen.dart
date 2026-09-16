@@ -56,7 +56,7 @@ class _MoonScreenState extends State<MoonScreen> {
                   top: 0,
                   left: 0,
                   right: 0,
-                  height: 330,
+                  height: 420,
                   child: IgnorePointer(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -68,37 +68,30 @@ class _MoonScreenState extends State<MoonScreen> {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Colors.black.withValues(alpha: 0.05), Colors.transparent],
+                          colors: [Colors.black.withValues(alpha: 0.30), Colors.transparent],
                         ),
                       ),
                     ),
                   ),
                 ),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isLandscape = constraints.maxWidth > constraints.maxHeight;
-                    final mainMoonSize = math.min(
-                      420.0,
-                      isLandscape ? constraints.maxHeight * 0.55 : constraints.maxWidth - 56,
-                    );
-                    return ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
+                ListView(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 24 + MediaQuery.of(context).padding.bottom),
+              children: [
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.primaryEmerald, const Color(0xFF115E56)]), borderRadius: BorderRadius.circular(16)),
                   child: Column(children: [
-                    Text(isAr ? 'طور القمر اليوم' : "Today's Moon Phase", style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                    const SizedBox(height: 10),
+                    Text(isAr ? 'طور القمر اليوم' : "Today's Moon Phase", style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                    const SizedBox(height: 12),
                     if (sighting != null)
                       SizedBox(
-                        width: mainMoonSize,
-                        height: mainMoonSize,
+                        width: 280,
+                        height: 280,
                         child: MoonPhaseIcon(ageDays: sighting.ageDays, illumination: sighting.illumination, isWaxing: sighting.isWaxing),
                       ),
-                    const SizedBox(height: 10),
-                    Text(sighting?.description ?? '', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 15)),
+                    const SizedBox(height: 12),
+                    Text(sighting?.description ?? '', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
                   ]),
                 ),
                 const SizedBox(height: 12),
@@ -125,12 +118,10 @@ class _MoonScreenState extends State<MoonScreen> {
                       title: Text(p.date),
                       subtitle: Text('${p.phase} -- ${(p.illumination * 100).round()}%'),
                     ),
-                      ],
-                    );
-                  },
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
+          ),
     );
   }
 }

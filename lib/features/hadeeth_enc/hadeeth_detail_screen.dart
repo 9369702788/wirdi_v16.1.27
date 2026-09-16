@@ -122,7 +122,7 @@ class _HadeethDetailScreenState extends State<HadeethDetailScreen> {
                   children: [
                     Text(detail.title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 12),
-                    Text(detail.matn, style: const TextStyle(color: Colors.white, fontSize: 18, height: 1.8)),
+                    Text(detail.matn, style: const TextStyle(fontFamily: 'AmiriQuran', color: Colors.white, fontSize: 20, height: 1.9)),
                   ],
                 ),
               ),

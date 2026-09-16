@@ -628,7 +628,18 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               title: l10n.localeName == 'ar' ? 'آية اليوم' : 'Verse of the Day',
               subtitle: '${VerseOfTheDayService.forToday().arabicText}\n${VerseOfTheDayService.forToday().surahName} - ${VerseOfTheDayService.forToday().ayahNumber}',
               trailing: const SizedBox.shrink(),
-              onTap: null,
+              onTap: () {
+                final verse = VerseOfTheDayService.forToday();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => QuranScreen(
+                      initialSurahNumber: verse.surahNumber,
+                      initialAyah: verse.ayahNumber,
+                    ),
+                  ),
+                );
+              },
             ),
             if (_hadithOfToday != null) ...[
               const SizedBox(height: 12),
@@ -654,7 +665,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               ),
             ],
 
-            Text(l10n.homeQuickActions, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              languageCode == 'ar' ? 'الأدوات الإسلامية' : 'Islamic Tools',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -719,8 +733,8 @@ class _DashboardCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 0,
-      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.86),
+      elevation: 3,
+      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       child: InkWell(

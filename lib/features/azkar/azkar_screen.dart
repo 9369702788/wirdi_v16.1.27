@@ -86,7 +86,7 @@ class _AzkarScreenState extends State<AzkarScreen> with SingleTickerProviderStat
             top: 0,
             left: 0,
             right: 0,
-            height: 260,
+            height: 380,
             child: IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -98,7 +98,8 @@ class _AzkarScreenState extends State<AzkarScreen> with SingleTickerProviderStat
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.black.withValues(alpha: 0.10), Colors.transparent],
+                    colors: [Colors.black.withValues(alpha: 0.28), Colors.black.withValues(alpha: 0.12), Colors.transparent],
+                    stops: [0.0, 0.45, 1.0],
                   ),
                 ),
               ),

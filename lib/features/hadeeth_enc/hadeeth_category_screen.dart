@@ -87,7 +87,7 @@ class _HadeethCategoryScreenState extends State<HadeethCategoryScreen> {
                 return Card(
                   child: ListTile(
                     leading: Icon(Icons.format_quote, color: AppColors.primaryEmerald),
-                    title: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    title: Text(item.title, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, height: 1.4)),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.push(
                       context,

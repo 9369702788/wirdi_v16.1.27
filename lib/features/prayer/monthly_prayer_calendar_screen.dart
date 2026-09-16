@@ -67,31 +67,35 @@ class _MonthlyPrayerCalendarScreenState extends State<MonthlyPrayerCalendarScree
           : _error != null
               ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(_error!, textAlign: TextAlign.center)))
               : SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    columns: [
-                      DataColumn(label: Text(isAr ? 'اليوم' : 'Day')),
-                      const DataColumn(label: Text('Fajr')),
-                      const DataColumn(label: Text('Dhuhr')),
-                      const DataColumn(label: Text('Asr')),
-                      const DataColumn(label: Text('Maghrib')),
-                      const DataColumn(label: Text('Isha')),
-                    ],
-                    rows: (_days ?? []).map((d) {
-                          final isToday = d['day'] == DateTime.now().day;
-                          final cellStyle = isToday ? const TextStyle(fontWeight: FontWeight.bold) : null;
-                          return DataRow(
-                            color: isToday ? WidgetStateProperty.all(AppColors.primaryEmerald.withValues(alpha: 0.15)) : null,
-                            cells: [
-                              DataCell(Text('${d['day']}', style: cellStyle)),
-                              DataCell(Text('${d['fajr']}', style: cellStyle)),
-                              DataCell(Text('${d['dhuhr']}', style: cellStyle)),
-                              DataCell(Text('${d['asr']}', style: cellStyle)),
-                              DataCell(Text('${d['maghrib']}', style: cellStyle)),
-                              DataCell(Text('${d['isha']}', style: cellStyle)),
-                            ],
-                          );
-                        }).toList(),
+                  scrollDirection: Axis.vertical,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      headingRowColor: WidgetStateProperty.all(AppColors.primaryEmerald.withValues(alpha: 0.1)),
+                      columns: [
+                        DataColumn(label: Text(isAr ? 'اليوم' : 'Day', style: const TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text(isAr ? 'الفجر' : 'Fajr', style: const TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text(isAr ? 'الظهر' : 'Dhuhr', style: const TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text(isAr ? 'العصر' : 'Asr', style: const TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text(isAr ? 'المغرب' : 'Maghrib', style: const TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text(isAr ? 'العشاء' : 'Isha', style: const TextStyle(fontWeight: FontWeight.bold))),
+                      ],
+                      rows: (_days ?? []).map((d) {
+                            final isToday = d['day'] == DateTime.now().day;
+                            final cellStyle = isToday ? const TextStyle(fontWeight: FontWeight.bold) : null;
+                            return DataRow(
+                              color: isToday ? WidgetStateProperty.all(AppColors.primaryEmerald.withValues(alpha: 0.18)) : null,
+                              cells: [
+                                DataCell(Text('${d['day']}', style: cellStyle)),
+                                DataCell(Text('${d['fajr']}', style: cellStyle)),
+                                DataCell(Text('${d['dhuhr']}', style: cellStyle)),
+                                DataCell(Text('${d['asr']}', style: cellStyle)),
+                                DataCell(Text('${d['maghrib']}', style: cellStyle)),
+                                DataCell(Text('${d['isha']}', style: cellStyle)),
+                              ],
+                            );
+                          }).toList(),
+                    ),
                   ),
                 )),
     );

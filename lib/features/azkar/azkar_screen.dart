@@ -53,7 +53,7 @@ class _AzkarScreenState extends State<AzkarScreen> with SingleTickerProviderStat
     return Scaffold(
       appBar: AppBar(
         foregroundColor: Colors.white,
-        flexibleSpace: _MosaicBg(col: 2, row: 1, opacity: 0.4),
+        flexibleSpace: _MosaicBg(col: 2, row: 1, opacity: 0.18),
         title: Text(l10n.azkarDuasTitle),
         centerTitle: true,
         bottom: TabBar(
@@ -80,7 +80,9 @@ class _AzkarScreenState extends State<AzkarScreen> with SingleTickerProviderStat
           ),
         ],
       ),
-      body: SafeArea(bottom: true, top: false, child: FutureBuilder<List<AzkarCategoryModel>>(
+      body: Stack(
+        children: [
+          SafeArea(bottom: true, top: false, child: FutureBuilder<List<AzkarCategoryModel>>(
             future: _future,
             builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
@@ -108,6 +110,8 @@ class _AzkarScreenState extends State<AzkarScreen> with SingleTickerProviderStat
               );
             },
           )),
+        ],
+      ),
     );
   }
 

@@ -9,6 +9,7 @@ import '../../core/data/juz_data.dart';
 import '../../core/data/reciters.dart';
 import '../../core/data/app_sources.dart';
 import '../../core/models/quran_models.dart';
+import '../../core/models/mushaf_models.dart';
 import '../../core/services/app_logger.dart';
 import '../../core/services/arabic_text_utils.dart';
 import '../../core/services/audio_download_service.dart';

@@ -176,7 +176,7 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
                         for (final reciter in Reciters.all)
                           ListTile(
                             title: Text(reciter.displayNameFor(languageCode)),
-                            trailing: reciter.id == appSettings.reciterId ? const Icon(Icons.check, color: AppColors.primaryEmerald) : null,
+                            trailing: reciter.id == appSettings.reciterId ? Icon(Icons.check, color: AppColors.primaryEmerald) : null,
                             onTap: () => Navigator.pop(sheetContext, reciter.id),
                           ),
                       ],

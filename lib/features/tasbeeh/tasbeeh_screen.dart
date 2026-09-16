@@ -122,25 +122,25 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
 
     final next = _today + 1;
     final nextTotal = _total + 1;
+    final completedCycle = next >= _selected.target;
 
-    // Update the UI immediately; persist in the background so disk I/O
-    // never delays the counter incrementing on screen.
+    // When the selected target is completed, immediately start a fresh
+    // empty cycle while keeping the completed tap in the lifetime totals.
     setState(() {
-      _today = next;
+      _today = completedCycle ? 0 : next;
       _total = nextTotal;
       _grandTotal += 1;
     });
 
-    unawaited(_persistIncrement(next, nextTotal));
+    unawaited(_persistIncrement(next, nextTotal, completedCycle: completedCycle));
 
-    if (_today == _selected.target) {
+    if (completedCycle) {
       HapticFeedback.heavyImpact();
     }
   }
-
-  Future<void> _persistIncrement(int next, int nextTotal) async {
+  Future<void> _persistIncrement(int next, int nextTotal, {bool completedCycle = false}) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('tasbeeh_today_${_selected.id}', next);
+    await prefs.setInt('tasbeeh_today_${_selected.id}', completedCycle ? 0 : next);
     await prefs.setString('tasbeeh_day_${_selected.id}', _todayKey());
     await prefs.setInt('tasbeeh_total_${_selected.id}', nextTotal);
     await UserProgressService.incrementTasbeehDailyTotal();

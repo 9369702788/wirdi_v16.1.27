@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../core/data/bismillah.dart';
+import '../../core/data/reciters.dart';
 import '../../core/models/mushaf_models.dart';
 import '../../core/models/quran_models.dart';
 import '../../core/services/mushaf_repository.dart';
@@ -13,10 +14,13 @@ import '../../core/services/settings_service.dart';
 import '../../core/services/user_progress_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../quran/widgets/quran_playback_bar.dart';
 
 class MushafViewScreen extends StatefulWidget {
   final int? initialPage;
-  const MushafViewScreen({super.key, this.initialPage});
+  final int? initialSurahNumber;
+  final int? initialAyah;
+  const MushafViewScreen({super.key, this.initialPage, this.initialSurahNumber, this.initialAyah});
 
   @override
   State<MushafViewScreen> createState() => _MushafViewScreenState();
@@ -47,12 +51,14 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
 
   int _currentPageIndex = 0;
   ScrollController? _continuousScrollController;
+  double _fontScale = 1.0;
 
   /// Cached once [_loadAll] resolves, so [_onAudioChanged] (which fires
   /// on every ayah transition, independent of the FutureBuilder) can
   /// look up which page a given ayah belongs to without re-awaiting
   /// the future.
   List<MushafPage>? _pages;
+  List<SurahModel>? _allSurahs;
 
   @override
   void initState() {
@@ -75,6 +81,16 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
     final results = await Future.wait([MushafRepository.load(), QuranRepository.load()]);
     final pages = results[0] as List<MushafPage>;
     _pages = pages;
+    _allSurahs = results[1] as List<SurahModel>;
+    if (widget.initialSurahNumber != null && widget.initialAyah != null) {
+      for (var i = 0; i < pages.length; i++) {
+        if (pages[i].ayahs.any((a) => a.surahNumber == widget.initialSurahNumber && a.ayahNumber == widget.initialAyah)) {
+          _currentPageIndex = i;
+          if (_pageController.hasClients) _pageController.jumpToPage(i);
+          break;
+        }
+      }
+    }
     return (pages, results[1] as List<SurahModel>);
   }
 
@@ -118,6 +134,20 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
     super.dispose();
   }
 
+  Future<void> _playWholeSurahFromCurrentPage() async {
+    final pages = _pages;
+    final surahs = _allSurahs;
+    if (pages == null || surahs == null || pages.isEmpty) return;
+    int? surahNumber = quranAudio.currentSurahNumber;
+    if (surahNumber == null) {
+      final page = pages[_currentPageIndex.clamp(0, pages.length - 1).toInt()];
+      if (page.ayahs.isNotEmpty) surahNumber = page.ayahs.first.surahNumber;
+    }
+    if (surahNumber == null) return;
+    final surah = surahs.firstWhere((s) => s.number == surahNumber, orElse: () => surahs.first);
+    await quranAudio.playWholeSurah(surah, surahs);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -126,6 +156,58 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
         title: Text(l10n.mushafTitle),
         centerTitle: true,
         actions: [
+          PopupMenuButton<String>(
+            tooltip: Localizations.localeOf(context).languageCode == 'ar' ? 'خيارات القراءة' : 'Reading options',
+            icon: const Icon(Icons.tune_rounded),
+            onSelected: (value) async {
+              if (value == 'fontDec') {
+                setState(() => _fontScale = (_fontScale - 0.1).clamp(0.7, 1.6));
+              } else if (value == 'fontInc') {
+                setState(() => _fontScale = (_fontScale + 0.1).clamp(0.7, 1.6));
+              } else if (value == 'reciter') {
+                final languageCode = Localizations.localeOf(context).languageCode;
+                final chosen = await showModalBottomSheet<String>(
+                  context: context,
+                  builder: (sheetContext) => SafeArea(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        Padding(padding: const EdgeInsets.all(16), child: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'اختيار القارئ' : 'Choose reciter', style: const TextStyle(fontWeight: FontWeight.w700))),
+                        for (final reciter in Reciters.all)
+                          ListTile(
+                            title: Text(reciter.displayNameFor(languageCode)),
+                            trailing: reciter.id == appSettings.reciterId ? const Icon(Icons.check, color: AppColors.primaryEmerald) : null,
+                            onTap: () => Navigator.pop(sheetContext, reciter.id),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+                if (chosen != null && chosen != appSettings.reciterId) {
+                  await quranAudio.stop();
+                  await appSettings.setReciterId(chosen);
+                  if (mounted) setState(() {});
+                }
+              }
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'reciter', child: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'القارئ' : 'Reciter')),
+              PopupMenuItem(value: 'fontDec', child: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'تصغير الخط' : 'Decrease font')),
+              PopupMenuItem(value: 'fontInc', child: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'تكبير الخط' : 'Increase font')),
+            ],
+          ),
+          ListenableBuilder(
+            listenable: quranAudio,
+            builder: (context, _) {
+              final activeWhole = quranAudio.playingWholeSurah;
+              final paused = quranAudio.isPaused;
+              return IconButton(
+                tooltip: paused ? (Localizations.localeOf(context).languageCode == 'ar' ? 'استكمال السورة' : 'Resume surah') : (activeWhole ? (Localizations.localeOf(context).languageCode == 'ar' ? 'إيقاف مؤقت' : 'Pause') : (Localizations.localeOf(context).languageCode == 'ar' ? 'تشغيل السورة كاملة' : 'Play whole surah')),
+                icon: Icon(paused ? Icons.play_arrow_rounded : (activeWhole ? Icons.pause_rounded : Icons.play_circle_outline)),
+                onPressed: paused ? quranAudio.resume : (activeWhole ? quranAudio.pause : _playWholeSurahFromCurrentPage),
+              );
+            },
+          ),
           IconButton(
             tooltip: _continuousScroll
                 ? (Localizations.localeOf(context).languageCode == 'ar' ? 'وضع الصفحات' : 'Page-flip mode')
@@ -168,6 +250,7 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const QuranPlaybackBar(),
       body: FutureBuilder<(List<MushafPage>, List<SurahModel>)>(
         future: _future,
         builder: (context, snapshot) {
@@ -210,10 +293,8 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
           // direction consistent no matter what language the rest of
           // the app's UI is in.
           if (_continuousScroll) {
-            return SafeArea(
-              bottom: true,
-              child: Directionality(
-                textDirection: TextDirection.rtl,
+            return Directionality(
+              textDirection: TextDirection.rtl,
               child: ListView.builder(
                 controller: _continuousScrollController,
                 // BUGFIX: this physics line existed on PageView.builder below
@@ -234,17 +315,15 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
                     onMultiTouch: (active) {
                       if (mounted && _multiTouchActive != active) setState(() => _multiTouchActive = active);
                     },
+                    fontScale: _fontScale,
                   );
                 },
-              ),
               ),
             );
           }
 
-          return SafeArea(
-            bottom: true,
-            child: Directionality(
-              textDirection: TextDirection.rtl,
+          return Directionality(
+            textDirection: TextDirection.rtl,
             child: PageView.builder(
               controller: _pageController,
               physics: _multiTouchActive ? const NeverScrollableScrollPhysics() : const PageScrollPhysics(),
@@ -265,9 +344,9 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
                   onMultiTouch: (active) {
                     if (mounted && _multiTouchActive != active) setState(() => _multiTouchActive = active);
                   },
+                  fontScale: _fontScale,
                 );
               },
-            ),
             ),
           );
         },
@@ -284,7 +363,8 @@ class _MushafPageView extends StatefulWidget {
   // _MushafPageViewState.build() below for why this is required instead
   // of relying on LayoutBuilder's constraints.maxHeight in that mode.
   final double? targetHeight;
-  const _MushafPageView({required this.page, required this.allSurahs, this.onMultiTouch, this.targetHeight});
+  final double fontScale;
+  const _MushafPageView({required this.page, required this.allSurahs, this.onMultiTouch, this.targetHeight, this.fontScale = 1.0});
 
   @override
   State<_MushafPageView> createState() => _MushafPageViewState();
@@ -548,7 +628,7 @@ class _MushafPageViewState extends State<_MushafPageView> {
       onPointerCancel: _handlePointerUp,
       child: LayoutBuilder(
       builder: (context, constraints) {
-        final verticalMargin = 0.0;
+        final verticalMargin = widget.targetHeight != null ? 12.0 + 20.0 + MediaQuery.of(context).padding.bottom : 0.0;
         // BUGFIX: in continuous-scroll mode this widget lives inside a
         // ListView.builder item slot, which gives LayoutBuilder an
         // UNBOUNDED (infinite) constraints.maxHeight -- that produced an
@@ -568,7 +648,9 @@ class _MushafPageViewState extends State<_MushafPageView> {
         // unchanged, so swipe-to-turn-page keeps working exactly as
         // before. Only 2-finger pinch/zoom gestures are captured here.
         final pageCard = Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8),
+          margin: widget.targetHeight != null
+              ? EdgeInsets.fromLTRB(14, 12, 14, 20 + MediaQuery.of(context).padding.bottom)
+              : EdgeInsets.zero,
           padding: const EdgeInsets.all(22),
           constraints: widget.targetHeight != null
               // Continuous-scroll mode: NO maxHeight cap -- let the card grow

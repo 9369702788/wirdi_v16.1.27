@@ -50,32 +50,8 @@ class _MoonScreenState extends State<MoonScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : Stack(
-              children: [
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 420,
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        image: const DecorationImage(
-                          image: AssetImage('assets/images/wirdi_mosaic.png'),
-                          fit: BoxFit.cover,
-                          alignment: Alignment.topCenter,
-                        ),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Colors.black.withValues(alpha: 0.30), Colors.transparent],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                ListView(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 24 + MediaQuery.of(context).padding.bottom),
+          : ListView(
+              padding: const EdgeInsets.all(16),
               children: [
                 Container(
                   width: double.infinity,
@@ -86,8 +62,8 @@ class _MoonScreenState extends State<MoonScreen> {
                     const SizedBox(height: 12),
                     if (sighting != null)
                       SizedBox(
-                        width: 280,
-                        height: 280,
+                        width: 220,
+                        height: 220,
                         child: MoonPhaseIcon(ageDays: sighting.ageDays, illumination: sighting.illumination, isWaxing: sighting.isWaxing),
                       ),
                     const SizedBox(height: 12),
@@ -111,17 +87,15 @@ class _MoonScreenState extends State<MoonScreen> {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: SizedBox(
-                        width: 64,
-                        height: 64,
+                        width: 44,
+                        height: 44,
                         child: MoonPhaseIcon(ageDays: p.ageDays, illumination: p.illumination, isWaxing: p.isWaxing),
                       ),
                       title: Text(p.date),
                       subtitle: Text('${p.phase} -- ${(p.illumination * 100).round()}%'),
                     ),
-                ],
-              ),
-            ],
-          ),
+              ],
+            ),
     );
   }
 }

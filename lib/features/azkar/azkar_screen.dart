@@ -53,7 +53,7 @@ class _AzkarScreenState extends State<AzkarScreen> with SingleTickerProviderStat
     return Scaffold(
       appBar: AppBar(
         foregroundColor: Colors.white,
-        flexibleSpace: _MosaicBg(col: 2, row: 1, opacity: 0.18),
+        flexibleSpace: _MosaicBg(col: 2, row: 1, opacity: 0.4),
         title: Text(l10n.azkarDuasTitle),
         centerTitle: true,
         bottom: TabBar(
@@ -80,32 +80,7 @@ class _AzkarScreenState extends State<AzkarScreen> with SingleTickerProviderStat
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 380,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/generated/mosque_sunrise.png'),
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                  ),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.black.withValues(alpha: 0.28), Colors.black.withValues(alpha: 0.12), Colors.transparent],
-                    stops: [0.0, 0.45, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SafeArea(bottom: true, top: false, child: FutureBuilder<List<AzkarCategoryModel>>(
+      body: SafeArea(bottom: true, top: false, child: FutureBuilder<List<AzkarCategoryModel>>(
             future: _future,
             builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
@@ -133,8 +108,6 @@ class _AzkarScreenState extends State<AzkarScreen> with SingleTickerProviderStat
               );
             },
           )),
-        ],
-      ),
     );
   }
 

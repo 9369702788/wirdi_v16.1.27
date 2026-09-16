@@ -269,10 +269,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         foregroundColor: Colors.white,
         flexibleSpace: _MosaicBg(col: 0, row: 0, opacity: 0.4),
         actions: [
-          IconButton(
-            tooltip: l10n.homeIslamicTools,
-            icon: const Icon(Icons.apps_outlined),
+          TextButton.icon(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IslamicToolsScreen())),
+            icon: const Icon(Icons.apps_outlined, color: Colors.white),
+            label: Text(l10n.homeIslamicTools, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
           ),
           IconButton(
             tooltip: l10n.commonSettingsTooltip,
@@ -281,39 +281,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 540,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/generated/mosque_sunrise.png'),
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                  ),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.18),
-                      Colors.black.withValues(alpha: 0.52),
-                      Colors.transparent,
-                    ],
-                    stops: [0.0, 0.48, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          RefreshIndicator(
-            onRefresh: _loadAll,
-            child: ListView(padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(context).padding.bottom),
-              children: [
+      body: RefreshIndicator(
+        onRefresh: _loadAll,
+        child: ListView(padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(context).padding.bottom),
+          children: [
             Text(_greeting(l10n), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
             Text(
@@ -627,17 +598,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               icon: Icons.menu_book_outlined,
               title: l10n.localeName == 'ar' ? 'آية اليوم' : 'Verse of the Day',
               subtitle: '${VerseOfTheDayService.forToday().arabicText}\n${VerseOfTheDayService.forToday().surahName} - ${VerseOfTheDayService.forToday().ayahNumber}',
-              trailing: const SizedBox.shrink(),
+              trailing: const Icon(Icons.chevron_left, color: AppColors.mutedText),
               onTap: () {
                 final verse = VerseOfTheDayService.forToday();
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => QuranScreen(
-                      initialSurahNumber: verse.surahNumber,
-                      initialAyah: verse.ayahNumber,
-                    ),
-                  ),
+                  MaterialPageRoute(builder: (_) => QuranScreen(initialSurahNumber: verse.surahNumber, initialAyah: verse.ayahNumber)),
                 );
               },
             ),
@@ -665,10 +631,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               ),
             ],
 
-            Text(
-              languageCode == 'ar' ? 'الأدوات الإسلامية' : 'Islamic Tools',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
+            Text(l10n.homeQuickActions, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -706,9 +669,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               ],
             ),
           ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -733,8 +694,8 @@ class _DashboardCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 3,
-      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.86),
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       child: InkWell(

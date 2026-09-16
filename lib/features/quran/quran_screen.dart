@@ -25,6 +25,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../mushaf/mushaf_view_screen.dart';
 import '../../core/services/bookmark_service.dart';
 import 'ayah_share_screen.dart';
+import 'widgets/quran_playback_bar.dart';
 
 class QuranScreen extends StatefulWidget {
   /// If set, the screen opens directly into the reader for this surah,
@@ -90,7 +91,7 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
       appBar: AppBar(
         foregroundColor: Colors.white,
         flexibleSpace: _MosaicBg(col: 3, row: 0, opacity: 0.4),
-        title: Text(l10n.quranTitle),
+        title: Directionality(textDirection: TextDirection.rtl, child: Text(l10n.quranTitle)),
         centerTitle: true,
         actions: [
           IconButton(
@@ -105,6 +106,8 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
           tabs: [
             Tab(text: l10n.quranTabSurahs),
             Tab(text: l10n.quranTabJuz),
@@ -270,7 +273,7 @@ class _SurahListTabState extends State<_SurahListTab> {
                     backgroundColor: AppColors.primaryEmerald.withValues(alpha: 0.12),
                     child: Text('${surah.number}', style: const TextStyle(color: Color(0xFF0F766E), fontWeight: FontWeight.bold)),
                   ),
-                  title: Text(surah.name, textAlign: TextAlign.right, style: TextStyle(fontFamily: 'AmiriQuran', fontSize: 22, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
+                  title: Text(surah.name, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'AmiriQuran', fontSize: 22, fontWeight: FontWeight.w700)),
                   subtitle: Text(l10n.quranSurahSubtitle(surah.englishName, surah.ayahs.length), textAlign: TextAlign.right),
                   trailing: const Icon(Icons.menu_book),
                   onTap: () => Navigator.push(
@@ -474,7 +477,7 @@ class _FavoritesTab extends StatelessWidget {
             final (surah, ayah) = results[index];
             return Card(
               child: ListTile(
-                title: Text(ayah.text, textDirection: TextDirection.rtl, textAlign: TextAlign.right, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(fontFamily: 'AmiriQuran', fontSize: 17, color: Theme.of(context).colorScheme.onSurface)),
+                title: Text(ayah.text, textDirection: TextDirection.rtl, textAlign: TextAlign.right, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'AmiriQuran', fontSize: 17)),
                 subtitle: Text(l10n.quranAyahLocation(surah.name, ayah.number), textAlign: TextAlign.right),
                 onTap: () => Navigator.push(
                   context,
@@ -761,11 +764,20 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
   Future<void> _openMushafView() async {
     try {
       await MushafRepository.load();
-      final startPage = MushafRepository.firstPageForSurah(await MushafRepository.load(), widget.surah.number) ?? 1;
+      final pages = await MushafRepository.load();
+      var startPage = MushafRepository.firstPageForSurah(pages, widget.surah.number) ?? 1;
+      final targetAyah = _lastKnownPlayingAyah ?? widget.scrollToAyah;
+      if (targetAyah != null) {
+        MushafPage? exactPage;
+        for (final page in pages) {
+          if (page.ayahs.any((a) => a.surahNumber == widget.surah.number && a.ayahNumber == targetAyah)) { exactPage = page; break; }
+        }
+        if (exactPage != null) startPage = exactPage.pageNumber;
+      }
       if (!mounted) return;
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => MushafViewScreen(initialPage: startPage)),
+        MaterialPageRoute(builder: (_) => MushafViewScreen(initialPage: startPage, initialSurahNumber: widget.surah.number, initialAyah: targetAyah)),
       );
     } catch (e, st) {
       AppLogger.error('Failed to open mushaf view', error: e, stackTrace: st);
@@ -1004,7 +1016,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.quranSurahAppBarTitle(surah.name)),
+        title: Directionality(textDirection: TextDirection.rtl, child: Text(l10n.quranSurahAppBarTitle(surah.name))),
         centerTitle: true,
         actions: [
           IconButton(
@@ -1104,6 +1116,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const QuranPlaybackBar(),
       body: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),

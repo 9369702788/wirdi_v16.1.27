@@ -10,7 +10,6 @@ import '../../core/models/prayer_models.dart';
 import '../../core/services/app_logger.dart';
 import '../../core/services/prayer_display.dart';
 import '../../core/services/prayer_notification_scheduler.dart';
-import '../../core/services/notification_service.dart';
 import '../../core/services/prayer_service.dart';
 import '../../core/services/moon_calculator.dart';
 import '../../core/services/settings_service.dart';
@@ -502,33 +501,31 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                 const SizedBox(height: 12),
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final compact = constraints.maxWidth < 360;
-                    final moonSize = (constraints.maxWidth * (compact ? 0.48 : 0.56)).clamp(170.0, 260.0);
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                    final moonSize = (constraints.maxWidth * 0.78).clamp(180.0, 250.0).toDouble();
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(
-                          flex: 3,
-                          child: Center(
-                            child: ClipOval(
-                              child: Image.asset(
-                                moonImageAsset,
-                                width: moonSize,
-                                height: moonSize,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => Icon(Icons.circle, size: moonSize, color: Colors.white54),
-                              ),
-                            ),
+                        ClipOval(
+                          child: Image.asset(
+                            moonImageAsset,
+                            width: moonSize,
+                            height: moonSize,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Icon(Icons.circle, size: moonSize, color: Colors.white54),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Flexible(
-                          flex: 2,
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white30),
+                          ),
                           child: Text(
-                            isAr ? 'طور القمر اليوم\n$moonPhaseName' : "Today's Moon Phase\n$moonPhaseName",
+                            moonPhaseName,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, height: 1.5),
+                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
@@ -575,69 +572,50 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
             final isPrayed = _prayedToday.contains(prayer.name);
             final hasPassed = prayer.dateTime.isBefore(DateTime.now());
             final displayName = prayerDisplayName(l10n, prayer.name);
-            final reminderEnabled = appSettings.isPrayerReminderEnabledFor(prayer.name);
-            final reminderMode = appSettings.effectiveModeFor(prayer.name);
             return Card(
               color: isNext ? AppColors.primaryEmerald.withValues(alpha: 0.08) : null,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                child: Row(
+              child: ListTile(
+                leading: Icon(Icons.mosque_outlined, color: isNext ? AppColors.primaryEmerald : AppColors.mutedText),
+                title: Text(displayName, style: TextStyle(fontWeight: isNext ? FontWeight.bold : FontWeight.w600)),
+                subtitle: Text(_calibratedTimeText(prayer), style: TextStyle(fontWeight: FontWeight.bold, color: isNext ? AppColors.primaryEmerald : null)),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.mosque_outlined, color: isNext ? AppColors.primaryEmerald : AppColors.mutedText),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(displayName, style: TextStyle(fontWeight: isNext ? FontWeight.bold : FontWeight.w600)),
-                          Text(_calibratedTimeText(prayer), style: TextStyle(fontWeight: FontWeight.bold, color: isNext ? AppColors.primaryEmerald : null)),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Icon(Icons.notifications_none, size: 15, color: reminderEnabled ? AppColors.primaryEmerald : AppColors.mutedText),
-                              const SizedBox(width: 3),
-                              Text(
-                                isAr ? (reminderEnabled ? 'التنبيه:' : 'متوقف') : (reminderEnabled ? 'Alert:' : 'Off'),
-                                style: TextStyle(fontSize: 11, color: reminderEnabled ? AppColors.primaryEmerald : AppColors.mutedText),
-                              ),
-                              if (reminderEnabled)
-                                Flexible(
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      isDense: true,
-                                      isExpanded: false,
-                                      value: reminderMode == 'adhan' || reminderMode == 'beep' || reminderMode == 'banner' ? reminderMode : 'banner',
-                                      items: [
-                                        DropdownMenuItem(value: 'adhan', child: Text(isAr ? 'أذان' : 'Adhan')),
-                                        DropdownMenuItem(value: 'beep', child: Text(isAr ? 'تنبيه صوتي' : 'Beep')), 
-                                        DropdownMenuItem(value: 'banner', child: Text(isAr ? 'إشعار' : 'Notification')),
-                                      ],
-                                      onChanged: (mode) async {
-                                        if (mode == null) return;
-                                        await appSettings.setPrayerSoundOverrideFor(prayer.name, mode);
-                                        if (mounted) unawaited(PrayerNotificationScheduler.rescheduleFromResult(context, result));
-                                      },
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
+                    PopupMenuButton<String>(
+                      tooltip: isAr ? 'إعداد إشعار الصلاة' : 'Prayer notification',
+                      icon: Icon(
+                        appSettings.isPrayerReminderEnabledFor(prayer.name)
+                            ? Icons.notifications_active_outlined
+                            : Icons.notifications_off_outlined,
+                        color: appSettings.isPrayerReminderEnabledFor(prayer.name) ? AppColors.primaryEmerald : AppColors.mutedText,
                       ),
-                    ),
-                    Switch(
-                      value: reminderEnabled,
-                      activeTrackColor: AppColors.primaryEmerald,
-                      onChanged: (enabled) async {
-                        await appSettings.setPrayerReminderEnabledFor(prayer.name, enabled);
-                        if (enabled) await NotificationService.requestPermission();
+                      onSelected: (mode) async {
+                        if (mode == 'off') {
+                          await appSettings.setPrayerReminderEnabledFor(prayer.name, false);
+                        } else {
+                          await appSettings.setPrayerReminderEnabledFor(prayer.name, true);
+                          await appSettings.setPrayerSoundOverrideFor(prayer.name, mode);
+                        }
+                        if (mounted) setState(() {});
                         if (mounted) unawaited(PrayerNotificationScheduler.rescheduleFromResult(context, result));
                       },
+                      itemBuilder: (_) => [
+                        PopupMenuItem(value: 'off', child: Text(isAr ? 'إيقاف الإشعار' : 'Notifications off')),
+                        PopupMenuItem(value: 'adhan', child: Text(isAr ? 'أذان' : 'Adhan')),
+                        PopupMenuItem(value: 'beep', child: Text(isAr ? 'تنبيه صوتي' : 'Sound alert')),
+                        PopupMenuItem(value: 'banner', child: Text(isAr ? 'إشعار فقط' : 'Notification only')),
+                      ],
                     ),
-                    Checkbox(
-                      value: isPrayed,
-                      activeColor: AppColors.primaryEmerald,
-                      onChanged: hasPassed ? (_) => _togglePrayed(prayer.name) : null,
+                    Semantics(
+                      button: hasPassed,
+                      label: !hasPassed
+                          ? l10n.prayerNotYetDue(displayName)
+                          : (isPrayed ? l10n.prayerMarkedDone(displayName) : l10n.prayerNotDoneYet(displayName)),
+                      child: Checkbox(
+                        value: isPrayed,
+                        activeColor: AppColors.primaryEmerald,
+                        onChanged: hasPassed ? (_) => _togglePrayed(prayer.name) : null,
+                      ),
                     ),
                   ],
                 ),

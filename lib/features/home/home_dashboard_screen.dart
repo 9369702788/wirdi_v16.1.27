@@ -281,7 +281,36 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
+      body: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 540,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/generated/mosque_sunrise.png'),
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                  ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.18),
+                      Colors.black.withValues(alpha: 0.52),
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 0.48, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          RefreshIndicator(
         onRefresh: _loadAll,
         child: ListView(padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(context).padding.bottom),
           children: [
@@ -669,7 +698,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               ],
             ),
           ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

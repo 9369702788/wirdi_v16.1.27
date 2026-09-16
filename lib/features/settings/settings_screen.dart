@@ -477,7 +477,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               const SizedBox(height: 20),
               ExpansionTile(
-                title: Text(l10n.settingsPrayerReminder, style: const TextStyle(fontWeight: FontWeight.w700)),
+                title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'التنبيهات والإشعارات' : 'Notifications', style: const TextStyle(fontWeight: FontWeight.w700)),
                 initiallyExpanded: false,
                 tilePadding: const EdgeInsets.symmetric(horizontal: 8),
                 children: [
@@ -839,7 +839,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               const SizedBox(height: 12),
               ExpansionTile(
-                title: Text(l10n.settingsMoreReminders, style: const TextStyle(fontWeight: FontWeight.w700)),
+                title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'التنبيهات الأخرى' : 'Other notifications', style: const TextStyle(fontWeight: FontWeight.w700)),
                 initiallyExpanded: false,
                 tilePadding: const EdgeInsets.symmetric(horizontal: 8),
                 children: [

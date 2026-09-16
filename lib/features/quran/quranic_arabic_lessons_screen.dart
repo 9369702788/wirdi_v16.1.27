@@ -27,7 +27,7 @@ class QuranicArabicLessonsScreen extends StatelessWidget {
               subtitle: Text(isAr ? '${words.length} كلمة' : '${words.length} words'),
               children: words
                   .map((w) => ListTile(
-                        title: Text(w.arabic, textDirection: TextDirection.rtl, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primaryEmerald)),
+                        title: Text(w.arabic, textDirection: TextDirection.rtl, style: TextStyle(fontFamily: 'AmiriQuran', fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primaryEmerald)),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

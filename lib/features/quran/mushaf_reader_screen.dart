@@ -652,8 +652,18 @@ class _MushafReaderScreenState extends State<MushafReaderScreen> {
             backgroundColor: AppColors.primaryEmerald.withValues(alpha: 0.1),
             child: Text('${s.number}', style: TextStyle(color: AppColors.primaryEmerald, fontSize: 12, fontWeight: FontWeight.bold)),
           ),
-          title: Text(s.name, textDirection: TextDirection.rtl),
-          subtitle: Text('${s.englishName} \u2014 ${s.ayahs.length} ${_t(context, '\u0622\u064a\u0629', 'verses')}', style: const TextStyle(fontSize: 12, color: AppColors.mutedText)),
+          title: Text(
+            s.name,
+            textDirection: TextDirection.rtl,
+            style: const TextStyle(fontFamily: 'AmiriQuran', fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(
+            Localizations.localeOf(context).languageCode == 'ar'
+                ? '${s.englishName} · ${s.ayahs.length} آيات'
+                : '${s.englishName} · ${s.ayahs.length} verses',
+            textDirection: TextDirection.rtl,
+            style: const TextStyle(fontSize: 13, color: AppColors.mutedText),
+          ),
           trailing: IconButton(
             icon: Icon(
               _pinnedSurahs.contains(s.number) ? Icons.push_pin : Icons.push_pin_outlined,

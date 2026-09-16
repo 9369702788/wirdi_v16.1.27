@@ -167,82 +167,83 @@ class _SurahListTabState extends State<_SurahListTab> {
           surah.englishName.toLowerCase().contains(query.toLowerCase());
     }).toList();
 
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 10,
-            runSpacing: 8,
-            children: [
-              Text(l10n.quranViewMode, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  try {
-                    await MushafRepository.load();
-                    if (!context.mounted) return;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MushafViewScreen(initialPage: 1)),
-                    );
-                  } catch (_) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.quranMushafPagesLoadError)),
+        if (!isLandscape) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(l10n.quranViewMode, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    try {
+                      await MushafRepository.load();
+                      if (!context.mounted) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MushafViewScreen(initialPage: 1)),
                       );
+                    } catch (_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.quranMushafPagesLoadError)),
+                        );
+                      }
                     }
-                  }
-                },
-                icon: const Icon(Icons.import_contacts_outlined, size: 18),
-                label: Text(l10n.quranViewAsMushafPages),
-              ),
-            ],
+                  },
+                  icon: const Icon(Icons.import_contacts_outlined, size: 18),
+                  label: Text(l10n.quranViewAsMushafPages),
+                ),
+              ],
+            ),
           ),
-        ),
-        FutureBuilder<double>(
-          future: UserProgressService.quranCompletionRatio(),
-          builder: (context, snapshot) {
-            final ratio = snapshot.data ?? 0.0;
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Semantics(
-                label: l10n.quranCompletionPercent((ratio * 100).round()),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16)),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(l10n.quranKhatmaProgress, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                            const SizedBox(height: 6),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: ratio,
-                                minHeight: 6,
-                                backgroundColor: AppColors.primaryEmerald.withValues(alpha: 0.1),
-                                valueColor: AlwaysStoppedAnimation(AppColors.primaryEmerald),
+          FutureBuilder<double>(
+            future: UserProgressService.quranCompletionRatio(),
+            builder: (context, snapshot) {
+              final ratio = snapshot.data ?? 0.0;
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Semantics(
+                  label: l10n.quranCompletionPercent((ratio * 100).round()),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16)),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.quranKhatmaProgress, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                              const SizedBox(height: 6),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: ratio,
+                                  minHeight: 6,
+                                  backgroundColor: AppColors.primaryEmerald.withValues(alpha: 0.1),
+                                  valueColor: AlwaysStoppedAnimation(AppColors.primaryEmerald),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text('${(ratio * 100).round()}%', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryEmerald)),
-                    ],
+                        const SizedBox(width: 12),
+                        Text('${(ratio * 100).round()}%', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryEmerald)),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          ),
+        ],
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          padding: EdgeInsets.fromLTRB(16, isLandscape ? 6 : 12, 16, isLandscape ? 4 : 8),
           child: TextField(
             controller: widget.controller,
             decoration: InputDecoration(
@@ -250,6 +251,7 @@ class _SurahListTabState extends State<_SurahListTab> {
               prefixIcon: const Icon(Icons.search),
               filled: true,
               fillColor: Theme.of(context).cardColor,
+              contentPadding: isLandscape ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8) : null,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
             ),
             onChanged: (_) => setState(() {}),
@@ -268,7 +270,7 @@ class _SurahListTabState extends State<_SurahListTab> {
                     backgroundColor: AppColors.primaryEmerald.withValues(alpha: 0.12),
                     child: Text('${surah.number}', style: const TextStyle(color: Color(0xFF0F766E), fontWeight: FontWeight.bold)),
                   ),
-                  title: Text(surah.name, textAlign: TextAlign.right, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                  title: Text(surah.name, textAlign: TextAlign.right, style: TextStyle(fontFamily: 'AmiriQuran', fontSize: 22, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
                   subtitle: Text(l10n.quranSurahSubtitle(surah.englishName, surah.ayahs.length), textAlign: TextAlign.right),
                   trailing: const Icon(Icons.menu_book),
                   onTap: () => Navigator.push(
@@ -472,7 +474,7 @@ class _FavoritesTab extends StatelessWidget {
             final (surah, ayah) = results[index];
             return Card(
               child: ListTile(
-                title: Text(ayah.text, textDirection: TextDirection.rtl, textAlign: TextAlign.right, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'AmiriQuran', fontSize: 17)),
+                title: Text(ayah.text, textDirection: TextDirection.rtl, textAlign: TextAlign.right, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(fontFamily: 'AmiriQuran', fontSize: 17, color: Theme.of(context).colorScheme.onSurface)),
                 subtitle: Text(l10n.quranAyahLocation(surah.name, ayah.number), textAlign: TextAlign.right),
                 onTap: () => Navigator.push(
                   context,

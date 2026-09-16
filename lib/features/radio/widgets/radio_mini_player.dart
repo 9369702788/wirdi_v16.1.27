@@ -84,7 +84,7 @@ class RadioMiniPlayer extends StatelessWidget {
                           color: Colors.white, size: 26),
                       onPressed: () {
                         if (svc.isPlaying) {
-                          svc.stop();
+                          svc.pause();
                         } else if (svc.currentStation != null) {
                           svc.play(svc.currentStation!);
                         }
@@ -92,8 +92,8 @@ class RadioMiniPlayer extends StatelessWidget {
                     ),
               if (svc.allStations.length > 1)
                 IconButton(
-                  icon: const Icon(Icons.skip_next_rounded, color: Colors.white70, size: 22),
-                  onPressed: () => svc.playNext(),
+                  icon: const Icon(Icons.skip_previous_rounded, color: Colors.white70, size: 22),
+                  onPressed: () => svc.playPrevious(),
                 )
               else
                 const SizedBox(width: 8),

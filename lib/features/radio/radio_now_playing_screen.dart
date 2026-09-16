@@ -161,9 +161,9 @@ class _RadioNowPlayingScreenState extends State<RadioNowPlayingScreen>
                       children: [
                         IconButton(
                           iconSize: 36,
-                          icon: const Icon(Icons.skip_previous_rounded, color: Colors.white),
-                          onPressed: canSkip ? () => svc.playPrevious() : null,
-                          tooltip: isAr ? 'المحطة السابقة' : 'Previous station',
+                          icon: const Icon(Icons.skip_next_rounded, color: Colors.white),
+                          onPressed: canSkip ? () => svc.playNext() : null,
+                          tooltip: isAr ? 'المحطة التالية' : 'Next station',
                         ),
                         const SizedBox(width: 18),
                         Container(
@@ -190,9 +190,9 @@ class _RadioNowPlayingScreenState extends State<RadioNowPlayingScreen>
                         const SizedBox(width: 18),
                         IconButton(
                           iconSize: 36,
-                          icon: const Icon(Icons.skip_next_rounded, color: Colors.white),
-                          onPressed: canSkip ? () => svc.playNext() : null,
-                          tooltip: isAr ? 'المحطة التالية' : 'Next station',
+                          icon: const Icon(Icons.skip_previous_rounded, color: Colors.white),
+                          onPressed: canSkip ? () => svc.playPrevious() : null,
+                          tooltip: isAr ? 'المحطة السابقة' : 'Previous station',
                         ),
                       ],
                     ),

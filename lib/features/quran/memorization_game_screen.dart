@@ -145,15 +145,33 @@ class _MemorizationGameScreenState extends State<MemorizationGameScreen> {
                         runSpacing: 8,
                         children: [
                           for (var i = 0; i < _promptWords.length; i++)
-                            Text(
-                              i == _hiddenIndex ? '________' : _promptWords[i],
-                              style: TextStyle(
-                                fontSize: 20,
-                                height: 1.8,
-                                fontWeight: i == _hiddenIndex ? FontWeight.bold : FontWeight.normal,
-                                color: i == _hiddenIndex ? AppColors.primaryEmerald : null,
-                              ),
-                            ),
+                            i == _hiddenIndex
+                                ? Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryEmerald.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: AppColors.primaryEmerald, width: 1.5),
+                                    ),
+                                    child: Text(
+                                      '.......',
+                                      style: TextStyle(
+                                        fontFamily: 'AmiriQuran',
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primaryEmerald,
+                                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    _promptWords[i],
+                                    style: const TextStyle(
+                                      fontFamily: 'AmiriQuran',
+                                      fontSize: 22,
+                                      height: 1.9,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
                         ],
                       ),
                     ),
@@ -161,8 +179,13 @@ class _MemorizationGameScreenState extends State<MemorizationGameScreen> {
                   ..._choices.map((w) => Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            side: BorderSide(color: AppColors.primaryEmerald.withValues(alpha: 0.4), width: 1.5),
+                          ),
                           onPressed: _feedback == null && _lastCorrect == null ? () => _choose(w) : null,
-                          child: Text(w, textDirection: TextDirection.rtl, style: const TextStyle(fontSize: 16)),
+                          child: Text(w, textDirection: TextDirection.rtl, style: const TextStyle(fontFamily: 'AmiriQuran', fontSize: 20, fontWeight: FontWeight.bold)),
                         ),
                       )),
                   if (_lastCorrect != null) ...[

@@ -9,6 +9,7 @@ import '../../core/services/arabic_text_utils.dart';
 import '../../core/services/azkar_repository.dart';
 import '../../core/services/hadith_repository.dart';
 import '../../core/services/quran_repository.dart';
+import '../../core/services/settings_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../azkar/azkar_screen.dart';
 import '../hadith/hadith_collection_screen.dart';
@@ -224,7 +225,17 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                     for (final hit in _quranResults)
                       Card(
                         child: ListTile(
-                          title: Text(hit.ayah.text, textDirection: TextDirection.rtl, textAlign: TextAlign.right),
+                          title: Text(
+                              hit.ayah.text,
+                              textDirection: TextDirection.rtl,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontFamily: appSettings.quranFontFamily == 'default' ? 'AmiriQuran' : appSettings.quranFontFamily,
+                                fontSize: 18,
+                                height: 1.8,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
                           subtitle: Text('${hit.surah.name} \u2022 ${hit.ayah.number}'),
                           onTap: () {
                             _saveToHistory(_controller.text);

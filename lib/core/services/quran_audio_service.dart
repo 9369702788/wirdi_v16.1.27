@@ -42,6 +42,8 @@ class QuranAudioService extends ChangeNotifier {
   bool isPaused = false;
   double playbackRate = 1.0;
   bool repeatSurah = false;
+  Duration position = Duration.zero;
+  Duration duration = Duration.zero;
 
   /// Which ayah number (if any) has been successfully preloaded into
   /// [_standby], confirmed by a completed (non-erroring) setSourceUrl
@@ -75,6 +77,18 @@ class QuranAudioService extends ChangeNotifier {
     final playerB = _playerB;
     playerA.onPlayerComplete.listen((_) => _handleComplete(playerA));
     playerB.onPlayerComplete.listen((_) => _handleComplete(playerB));
+    playerA.onPositionChanged.listen((p) {
+      if (playerA == _active) { position = p; notifyListeners(); }
+    });
+    playerB.onPositionChanged.listen((p) {
+      if (playerB == _active) { position = p; notifyListeners(); }
+    });
+    playerA.onDurationChanged.listen((d) {
+      if (playerA == _active) { duration = d; notifyListeners(); }
+    });
+    playerB.onDurationChanged.listen((d) {
+      if (playerB == _active) { duration = d; notifyListeners(); }
+    });
 
     _initialized = true;
   }
@@ -93,6 +107,8 @@ class QuranAudioService extends ChangeNotifier {
     _loadSurahContext(surah, allSurahs);
     playingWholeSurah = false;
     isPaused = false;
+    position = Duration.zero;
+    duration = Duration.zero;
     if (!keepRepeat) repeatCurrent = false;
     notifyListeners();
     await _playAyahAudio(ayahNumber);
@@ -107,6 +123,8 @@ class QuranAudioService extends ChangeNotifier {
     _rangeEndAyah = null;
     repeatCurrent = false;
     isPaused = false;
+    position = Duration.zero;
+    duration = Duration.zero;
     notifyListeners();
     await _playAyahAudio(1);
     _preloadNext(2);
@@ -125,6 +143,8 @@ class QuranAudioService extends ChangeNotifier {
     _rangeEndAyah = endAyah;
     repeatCurrent = false;
     isPaused = false;
+    position = Duration.zero;
+    duration = Duration.zero;
     notifyListeners();
     await _playAyahAudio(startAyah);
     _preloadNext(startAyah + 1);
@@ -155,9 +175,21 @@ class QuranAudioService extends ChangeNotifier {
     }
   }
 
+  Future<void> seek(Duration target) async {
+    try {
+      await _active.seek(target);
+      position = target;
+      notifyListeners();
+    } catch (e, st) {
+      AppLogger.error('Failed to seek Quran audio', error: e, stackTrace: st);
+    }
+  }
+
   Future<void> _playAyahAudio(int ayahNumber) async {
     final globalNumber = _surahAyahOffset + ayahNumber;
     playingAyah = ayahNumber;
+    position = Duration.zero;
+    duration = Duration.zero;
     isBuffering = true;
     notifyListeners();
 
@@ -280,6 +312,8 @@ class QuranAudioService extends ChangeNotifier {
     isPaused = false;
     _rangeStartAyah = null;
     _rangeEndAyah = null;
+    position = Duration.zero;
+    duration = Duration.zero;
     notifyListeners();
   }
 

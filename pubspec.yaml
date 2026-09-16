@@ -69,5 +69,5 @@ flutter:
   assets:
     - assets/fonts/
     - assets/images/moon_phases/
-    - assets/images/generated/
     - assets/images/wirdi_mosaic.png
+    - assets/images/generated/

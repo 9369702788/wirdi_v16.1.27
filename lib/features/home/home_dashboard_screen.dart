@@ -287,7 +287,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             top: 0,
             left: 0,
             right: 0,
-            height: 540,
+            height: 700,
             child: IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(

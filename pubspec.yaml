@@ -70,3 +70,4 @@ flutter:
     - assets/fonts/
     - assets/images/moon_phases/
     - assets/images/wirdi_mosaic.png
+    - assets/images/generated/

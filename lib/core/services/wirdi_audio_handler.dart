@@ -53,15 +53,19 @@ class WirdiAudioHandler extends BaseAudioHandler {
 
     playbackState.add(playbackState.value.copyWith(
       controls: [
-        MediaControl.stop,
+        MediaControl.skipToPrevious,
         r.isPlaying ? MediaControl.pause : MediaControl.play,
+        MediaControl.skipToNext,
+        MediaControl.stop,
       ],
       systemActions: const {
         MediaAction.play,
         MediaAction.pause,
         MediaAction.stop,
+        MediaAction.skipToNext,
+        MediaAction.skipToPrevious,
       },
-      androidCompactActionIndices: const [0, 1],
+      androidCompactActionIndices: const [0, 1, 2],
       processingState: r.isLoading
           ? AudioProcessingState.loading
           : AudioProcessingState.ready,
@@ -124,6 +128,20 @@ class WirdiAudioHandler extends BaseAudioHandler {
       await RadioService.instance.pause();
     } else if (_quranActive) {
       await quranAudio.pause();
+    }
+  }
+
+  @override
+  Future<void> skipToNext() async {
+    if (_radioActive) {
+      await RadioService.instance.playNext();
+    }
+  }
+
+  @override
+  Future<void> skipToPrevious() async {
+    if (_radioActive) {
+      await RadioService.instance.playPrevious();
     }
   }
 

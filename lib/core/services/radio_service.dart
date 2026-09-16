@@ -40,7 +40,6 @@ class RadioService extends ChangeNotifier {
   int? _sleepMinutesRemaining;
   Set<String> _favoriteIds = {};
   bool _initialized = false;
-  int _playRequestId = 0;
 
   // Start with embedded list immediately — no waiting
   List<RadioStation> _liveStations = kFallbackStations;
@@ -228,7 +227,6 @@ class RadioService extends ChangeNotifier {
 
   // ── Playback ─────────────────────────────────────────────────────
   Future<void> play(RadioStation station) async {
-    final requestId = ++_playRequestId;
     try {
       if (_currentStation?.id == station.id && isPlaying) return;
       await PlaybackCoordinator.stopQuranForRadio();
@@ -239,7 +237,6 @@ class RadioService extends ChangeNotifier {
       await _player.stop();
       await _player.setReleaseMode(ReleaseMode.stop);
       await _player.play(UrlSource(station.streamUrl));
-      if (requestId != _playRequestId) { await _player.stop(); return; }
     } catch (e) {
       debugPrint('[Radio] play error: ' + e.toString());
       _state = RadioState.error;
@@ -265,7 +262,6 @@ class RadioService extends ChangeNotifier {
   /// don't have a meaningful buffered position to truly resume from, so
   /// resuming re-fetches the stream fresh via [play].
   Future<void> pause() async {
-    ++_playRequestId;
     try { await _player.stop(); } catch (e) {
       debugPrint('[Radio] pause error: ' + e.toString());
     }
@@ -275,7 +271,7 @@ class RadioService extends ChangeNotifier {
 
   Future<void> togglePlay(RadioStation station) async {
     if (_currentStation?.id == station.id && isPlaying) {
-      await stop();
+      await pause();
     } else {
       await play(station);
     }

@@ -709,11 +709,6 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
   /// depend on guessing item height at all.
   Future<void> _scrollToAyah(int ayahNumber) async {
     if (!mounted) return;
-
-    // The reader keeps a large cache extent so the requested ayah can be
-    // mounted before we ask Flutter to reveal it.  Wait through a few
-    // frames instead of estimating an offset: ayah cards have different
-    // heights, so an estimated pixel position can land on the wrong ayah.
     for (var attempt = 0; attempt < 12; attempt++) {
       if (!mounted) return;
       await WidgetsBinding.instance.endOfFrame;
@@ -734,21 +729,27 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
 
   Future<void> _openMushafView() async {
     try {
-      await MushafRepository.load();
       final pages = await MushafRepository.load();
       var startPage = MushafRepository.firstPageForSurah(pages, widget.surah.number) ?? 1;
       final targetAyah = _lastKnownPlayingAyah ?? widget.scrollToAyah;
       if (targetAyah != null) {
-        MushafPage? exactPage;
         for (final page in pages) {
-          if (page.ayahs.any((a) => a.surahNumber == widget.surah.number && a.ayahNumber == targetAyah)) { exactPage = page; break; }
+          if (page.ayahs.any((a) => a.surahNumber == widget.surah.number && a.ayahNumber == targetAyah)) {
+            startPage = page.pageNumber;
+            break;
+          }
         }
-        if (exactPage != null) startPage = exactPage.pageNumber;
       }
       if (!mounted) return;
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => MushafViewScreen(initialPage: startPage, initialSurahNumber: widget.surah.number, initialAyah: targetAyah)),
+        MaterialPageRoute(
+          builder: (_) => MushafViewScreen(
+            initialPage: startPage,
+            initialSurahNumber: widget.surah.number,
+            initialAyah: targetAyah,
+          ),
+        ),
       );
     } catch (e, st) {
       AppLogger.error('Failed to open mushaf view', error: e, stackTrace: st);
@@ -915,22 +916,92 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
             ),
           ),
           actions: [
-          if (!isLandscape) ...[
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(l10n.commonCancel)),
+            TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text(l10n.commonSave)),
+          ],
+        ),
+      ),
+    );
+
+    if (saved != true) return;
+    await BookmarkService.addBookmark(
+      surahNumber: widget.surah.number,
+      surahName: widget.surah.name,
+      ayahNumber: ayah.number,
+      ayahText: ayah.text,
+      note: noteController.text.trim(),
+      category: selectedCategory,
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.bookmarkSavedSnackbar)));
+  }
+
+  void _shareAyahAsImage(AyahModel ayah) {
+    final translation = QuranTranslationRepository.translationFor(_translationData, ayah.number);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AyahShareScreen(
+          arabicText: ayah.text,
+          translationText: translation,
+          surahNameArabic: widget.surah.name,
+          surahNameLocalized: widget.surah.englishName,
+          surahNumber: widget.surah.number,
+          ayahNumber: ayah.number,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _markSurahReadToday() async {
+    await UserProgressService.markPageRead();
+    await UserProgressService.registerStreakCheckpoint();
+    await UserProgressService.markSurahCompleted(widget.surah.number);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).quranAddedToWird)));
+  }
+
+  Future<void> _playAyah(int ayahNumber, {bool keepRepeat = false}) async {
+    await quranAudio.playAyah(widget.surah, widget.allSurahs, ayahNumber, keepRepeat: keepRepeat);
+  }
+
+  /// "Play whole surah" — rather than depending on a separate
+  /// full-chapter CDN endpoint (which isn't guaranteed to exist for
+  /// every reciter/bitrate combination, unlike per-ayah audio, and
+  /// wasn't playing reliably), this auto-advances through each ayah
+  /// using the same per-ayah playback that's confirmed to work. The
+  /// currently-reciting ayah is highlighted as a bonus. Lives in
+  /// [QuranAudioService] now so it keeps playing across navigation.
+  Future<void> _playWholeSurah() async {
+    await quranAudio.playWholeSurah(widget.surah, widget.allSurahs);
+  }
+
+  Future<void> _stopAudio() async {
+    await quranAudio.stop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final surah = widget.surah;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Text(l10n.quranSurahAppBarTitle(surah.name)),
+        ),
+        centerTitle: true,
+        actions: [
+          if (MediaQuery.of(context).orientation != Orientation.landscape) ...[
             IconButton(
               tooltip: languageCode == 'ar' ? 'السورة السابقة' : 'Previous surah',
               onPressed: surah.number > 1
                   ? () {
-                      final prevSurah = widget.allSurahs.firstWhere(
-                        (s) => s.number == surah.number - 1,
-                        orElse: () => surah,
-                      );
+                      final prevSurah = widget.allSurahs.firstWhere((s) => s.number == surah.number - 1, orElse: () => surah);
                       if (prevSurah.number != surah.number) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => SurahReaderScreen(surah: prevSurah, allSurahs: widget.allSurahs),
-                          ),
-                        );
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SurahReaderScreen(surah: prevSurah, allSurahs: widget.allSurahs)));
                       }
                     }
                   : null,
@@ -940,21 +1011,13 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
               tooltip: languageCode == 'ar' ? 'السورة التالية' : 'Next surah',
               onPressed: surah.number < 114
                   ? () {
-                      final nextSurah = widget.allSurahs.firstWhere(
-                        (s) => s.number == surah.number + 1,
-                        orElse: () => surah,
-                      );
+                      final nextSurah = widget.allSurahs.firstWhere((s) => s.number == surah.number + 1, orElse: () => surah);
                       if (nextSurah.number != surah.number) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => SurahReaderScreen(surah: nextSurah, allSurahs: widget.allSurahs),
-                          ),
-                        );
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SurahReaderScreen(surah: nextSurah, allSurahs: widget.allSurahs)));
                       }
                     }
                   : null,
-            icon: const Icon(Icons.skip_next_rounded),
+              icon: const Icon(Icons.skip_next_rounded),
             ),
             _DownloadButton(surah: surah, allSurahs: widget.allSurahs),
             IconButton(
@@ -962,62 +1025,41 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
               onPressed: _openMushafView,
               icon: const Icon(Icons.import_contacts_outlined),
             ),
-            PopupMenuButton<String>(
-              tooltip: l10n.navMore,
-              icon: const Icon(Icons.more_vert),
-              onSelected: (value) {
-                if (value == 'reciter') {
-                  _pickReciter();
-                } else if (value == 'fontDec') {
-                  setState(() => _fontScale = (_fontScale - 0.1).clamp(0.7, 1.6));
-                } else if (value == 'fontInc') {
-                  setState(() => _fontScale = (_fontScale + 0.1).clamp(0.7, 1.6));
-                } else if (value == 'wird') {
-                  _markSurahReadToday();
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(value: 'reciter', child: Row(children: [const Icon(Icons.record_voice_over_outlined, size: 20), const SizedBox(width: 10), Flexible(child: Text(l10n.quranChooseReciterTooltip(Reciters.byId(appSettings.reciterId).displayNameFor(languageCode))))])),
-                PopupMenuItem(value: 'fontDec', child: Row(children: [const Icon(Icons.text_decrease, size: 20), const SizedBox(width: 10), Text(l10n.quranDecreaseFontTooltip)])),
-                PopupMenuItem(value: 'fontInc', child: Row(children: [const Icon(Icons.text_increase, size: 20), const SizedBox(width: 10), Text(l10n.quranIncreaseFontTooltip)])),
-                PopupMenuItem(value: 'wird', child: Row(children: [const Icon(Icons.playlist_add_check, size: 20), const SizedBox(width: 10), Text(l10n.quranAddToWirdTooltip)])),
-              ],
-            ),
           ] else ...[
             _DownloadButton(surah: surah, allSurahs: widget.allSurahs),
-            PopupMenuButton<String>(
-              tooltip: l10n.navMore,
-              icon: const Icon(Icons.more_vert),
-              onSelected: (value) {
-                if (value == 'prev' && surah.number > 1) {
-                  final prevSurah = widget.allSurahs.firstWhere((s) => s.number == surah.number - 1, orElse: () => surah);
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SurahReaderScreen(surah: prevSurah, allSurahs: widget.allSurahs)));
-                } else if (value == 'next' && surah.number < 114) {
-                  final nextSurah = widget.allSurahs.firstWhere((s) => s.number == surah.number + 1, orElse: () => surah);
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SurahReaderScreen(surah: nextSurah, allSurahs: widget.allSurahs)));
-                } else if (value == 'mushaf') {
-                  _openMushafView();
-                } else if (value == 'reciter') {
-                  _pickReciter();
-                } else if (value == 'fontDec') {
-                  setState(() => _fontScale = (_fontScale - 0.1).clamp(0.7, 1.6));
-                } else if (value == 'fontInc') {
-                  setState(() => _fontScale = (_fontScale + 0.1).clamp(0.7, 1.6));
-                } else if (value == 'wird') {
-                  _markSurahReadToday();
-                }
-              },
-              itemBuilder: (context) => [
-                if (surah.number > 1) PopupMenuItem(value: 'prev', child: Text(languageCode == 'ar' ? 'السورة السابقة' : 'Previous surah')),
-                if (surah.number < 114) PopupMenuItem(value: 'next', child: Text(languageCode == 'ar' ? 'السورة التالية' : 'Next surah')),
-                PopupMenuItem(value: 'mushaf', child: Text(l10n.quranViewAsMushafPageTooltip)),
-                PopupMenuItem(value: 'reciter', child: Text(l10n.quranChooseReciterTooltip(Reciters.byId(appSettings.reciterId).displayNameFor(languageCode)))),
-                PopupMenuItem(value: 'fontDec', child: Text(l10n.quranDecreaseFontTooltip)),
-                PopupMenuItem(value: 'fontInc', child: Text(l10n.quranIncreaseFontTooltip)),
-                PopupMenuItem(value: 'wird', child: Text(l10n.quranAddToWirdTooltip)),
-              ],
-            ),
           ],
+          PopupMenuButton<String>(
+            tooltip: l10n.navMore,
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'prev' && surah.number > 1) {
+                final prevSurah = widget.allSurahs.firstWhere((s) => s.number == surah.number - 1, orElse: () => surah);
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SurahReaderScreen(surah: prevSurah, allSurahs: widget.allSurahs)));
+              } else if (value == 'next' && surah.number < 114) {
+                final nextSurah = widget.allSurahs.firstWhere((s) => s.number == surah.number + 1, orElse: () => surah);
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SurahReaderScreen(surah: nextSurah, allSurahs: widget.allSurahs)));
+              } else if (value == 'mushaf') {
+                _openMushafView();
+              } else if (value == 'reciter') {
+                _pickReciter();
+              } else if (value == 'fontDec') {
+                setState(() => _fontScale = (_fontScale - 0.1).clamp(0.7, 1.6));
+              } else if (value == 'fontInc') {
+                setState(() => _fontScale = (_fontScale + 0.1).clamp(0.7, 1.6));
+              } else if (value == 'wird') {
+                _markSurahReadToday();
+              }
+            },
+            itemBuilder: (context) => [
+              if (MediaQuery.of(context).orientation == Orientation.landscape && surah.number > 1) PopupMenuItem(value: 'prev', child: Text(languageCode == 'ar' ? 'السورة السابقة' : 'Previous surah')),
+              if (MediaQuery.of(context).orientation == Orientation.landscape && surah.number < 114) PopupMenuItem(value: 'next', child: Text(languageCode == 'ar' ? 'السورة التالية' : 'Next surah')),
+              if (MediaQuery.of(context).orientation == Orientation.landscape) PopupMenuItem(value: 'mushaf', child: Text(l10n.quranViewAsMushafPageTooltip)),
+              PopupMenuItem(value: 'reciter', child: Text(l10n.quranChooseReciterTooltip(Reciters.byId(appSettings.reciterId).displayNameFor(languageCode)))),
+              PopupMenuItem(value: 'fontDec', child: Text(l10n.quranDecreaseFontTooltip)),
+              PopupMenuItem(value: 'fontInc', child: Text(l10n.quranIncreaseFontTooltip)),
+              PopupMenuItem(value: 'wird', child: Text(l10n.quranAddToWirdTooltip)),
+            ],
+          ),
         ],
       ),
       bottomNavigationBar: const QuranPlaybackBar(),

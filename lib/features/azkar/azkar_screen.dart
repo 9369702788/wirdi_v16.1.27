@@ -53,7 +53,7 @@ class _AzkarScreenState extends State<AzkarScreen> with SingleTickerProviderStat
     return Scaffold(
       appBar: AppBar(
         foregroundColor: Colors.white,
-        flexibleSpace: _MosaicBg(col: 2, row: 1, opacity: 0.18),
+        flexibleSpace: _MosaicBg(col: 2, row: 1, opacity: 0.4),
         title: Text(l10n.azkarDuasTitle),
         centerTitle: true,
         bottom: TabBar(
@@ -82,6 +82,15 @@ class _AzkarScreenState extends State<AzkarScreen> with SingleTickerProviderStat
       ),
       body: Stack(
         children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.sizeOf(context).height * 0.45,
+            child: IgnorePointer(
+              child: _MosaicBg(col: 2, row: 1, opacity: 0.10),
+            ),
+          ),
           SafeArea(bottom: true, top: false, child: FutureBuilder<List<AzkarCategoryModel>>(
             future: _future,
             builder: (context, snapshot) {

@@ -86,7 +86,11 @@ class _MushafViewScreenState extends State<MushafViewScreen> {
       for (var i = 0; i < pages.length; i++) {
         if (pages[i].ayahs.any((a) => a.surahNumber == widget.initialSurahNumber && a.ayahNumber == widget.initialAyah)) {
           _currentPageIndex = i;
-          if (_pageController.hasClients) _pageController.jumpToPage(i);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _pageController.hasClients) {
+              _pageController.jumpToPage(i);
+            }
+          });
           break;
         }
       }
@@ -446,38 +450,12 @@ class _MushafPageViewState extends State<_MushafPageView> {
   }
 
   void _playAyah(MushafAyahRef ayah) {
-    // Temporary loud diagnostics -- a tap that silently does nothing is
-    // indistinguishable, from the user's side, between "the gesture never
-    // registered" and "the gesture fired but playback failed silently".
-    // A visible SnackBar on every path removes that ambiguity completely.
-    debugPrint('[MushafTap] tapped surah=${ayah.surahNumber} ayah=${ayah.ayahNumber}');
-    if (mounted) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          duration: const Duration(milliseconds: 900),
-          content: Text('Tapped surah ${ayah.surahNumber}, ayah ${ayah.ayahNumber}'),
-        ),
-      );
-    }
     final surah = _surahFor(ayah.surahNumber);
-    if (surah == null) {
-      debugPrint('[MushafTap] ABORT: no SurahModel found for surahNumber=${ayah.surahNumber} in allSurahs (length=${widget.allSurahs.length})');
-      return;
-    }
+    if (surah == null) return;
     if (quranAudio.isPlayingFor(ayah.surahNumber, ayah.ayahNumber)) {
-      debugPrint('[MushafTap] already playing this ayah -> stopping');
       quranAudio.stop();
     } else {
-      debugPrint('[MushafTap] calling quranAudio.playAyah(surah=${surah.number}, ayahNumber=${ayah.ayahNumber})');
-      quranAudio.playAyah(surah, widget.allSurahs, ayah.ayahNumber).catchError((e, st) {
-        debugPrint('[MushafTap] playAyah threw: $e');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Playback error: $e')),
-          );
-        }
-      });
+      quranAudio.playAyah(surah, widget.allSurahs, ayah.ayahNumber);
     }
   }
 

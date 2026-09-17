@@ -708,47 +708,17 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
   /// number, it's further up (search the lower half). This doesn't
   /// depend on guessing item height at all.
   Future<void> _scrollToAyah(int ayahNumber) async {
-    if (_tryEnsureVisible(ayahNumber)) return;
-    if (!_scrollController.hasClients) return;
+    if (!mounted) return;
 
-    var low = 0.0;
-    var high = _scrollController.position.maxScrollExtent;
-
-    for (var attempt = 0; attempt < 18; attempt++) {
+    // The reader keeps a large cache extent so the requested ayah can be
+    // mounted before we ask Flutter to reveal it.  Wait through a few
+    // frames instead of estimating an offset: ayah cards have different
+    // heights, so an estimated pixel position can land on the wrong ayah.
+    for (var attempt = 0; attempt < 12; attempt++) {
       if (!mounted) return;
-      final mid = (low + high) / 2;
-      _scrollController.jumpTo(mid);
-      await Future.delayed(const Duration(milliseconds: 55));
-      if (!mounted) return;
-
+      await WidgetsBinding.instance.endOfFrame;
       if (_tryEnsureVisible(ayahNumber)) return;
-
-      final builtNearby = _ayahKeys.entries
-          .where((e) => e.value.currentContext != null)
-          .map((e) => e.key)
-          .toList();
-
-      if (builtNearby.isEmpty) {
-        // Nothing built yet at all (shouldn't normally happen this
-        // early) — narrow slightly and try again.
-        high = mid;
-        continue;
-      }
-
-      final anyBelowTarget = builtNearby.any((n) => n < ayahNumber);
-      final anyAboveTarget = builtNearby.any((n) => n > ayahNumber);
-
-      if (anyBelowTarget && !anyAboveTarget) {
-        low = mid; // target is further down the list
-      } else if (anyAboveTarget && !anyBelowTarget) {
-        high = mid; // target is further up the list
-      } else {
-        // Mixed (target's neighborhood is likely already built) or a
-        // razor-thin remaining range — one more direct check and stop
-        // narrowing further either way.
-        if (_tryEnsureVisible(ayahNumber)) return;
-        if ((high - low).abs() < 2) return;
-      }
+      await Future.delayed(const Duration(milliseconds: 50));
     }
   }
 
@@ -945,181 +915,115 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(l10n.commonCancel)),
-            TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text(l10n.commonSave)),
-          ],
-        ),
-      ),
-    );
-
-    if (saved != true) return;
-    await BookmarkService.addBookmark(
-      surahNumber: widget.surah.number,
-      surahName: widget.surah.name,
-      ayahNumber: ayah.number,
-      ayahText: ayah.text,
-      note: noteController.text.trim(),
-      category: selectedCategory,
-    );
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.bookmarkSavedSnackbar)));
-  }
-
-  void _shareAyahAsImage(AyahModel ayah) {
-    final translation = QuranTranslationRepository.translationFor(_translationData, ayah.number);
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AyahShareScreen(
-          arabicText: ayah.text,
-          translationText: translation,
-          surahNameArabic: widget.surah.name,
-          surahNameLocalized: widget.surah.englishName,
-          surahNumber: widget.surah.number,
-          ayahNumber: ayah.number,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _markSurahReadToday() async {
-    await UserProgressService.markPageRead();
-    await UserProgressService.registerStreakCheckpoint();
-    await UserProgressService.markSurahCompleted(widget.surah.number);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).quranAddedToWird)));
-  }
-
-  Future<void> _playAyah(int ayahNumber, {bool keepRepeat = false}) async {
-    await quranAudio.playAyah(widget.surah, widget.allSurahs, ayahNumber, keepRepeat: keepRepeat);
-  }
-
-  /// "Play whole surah" — rather than depending on a separate
-  /// full-chapter CDN endpoint (which isn't guaranteed to exist for
-  /// every reciter/bitrate combination, unlike per-ayah audio, and
-  /// wasn't playing reliably), this auto-advances through each ayah
-  /// using the same per-ayah playback that's confirmed to work. The
-  /// currently-reciting ayah is highlighted as a bonus. Lives in
-  /// [QuranAudioService] now so it keeps playing across navigation.
-  Future<void> _playWholeSurah() async {
-    await quranAudio.playWholeSurah(widget.surah, widget.allSurahs);
-  }
-
-  Future<void> _stopAudio() async {
-    await quranAudio.stop();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final languageCode = Localizations.localeOf(context).languageCode;
-    final surah = widget.surah;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Directionality(textDirection: TextDirection.rtl, child: Text(l10n.quranSurahAppBarTitle(surah.name))),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip: languageCode == 'ar' ? 'السورة السابقة' : 'Previous surah',
-            onPressed: surah.number > 1
-                ? () {
-                    final prevSurah = widget.allSurahs.firstWhere(
-                      (s) => s.number == surah.number - 1,
-                      orElse: () => surah,
-                    );
-                    if (prevSurah.number != surah.number) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => SurahReaderScreen(surah: prevSurah, allSurahs: widget.allSurahs),
-                        ),
+          if (!isLandscape) ...[
+            IconButton(
+              tooltip: languageCode == 'ar' ? 'السورة السابقة' : 'Previous surah',
+              onPressed: surah.number > 1
+                  ? () {
+                      final prevSurah = widget.allSurahs.firstWhere(
+                        (s) => s.number == surah.number - 1,
+                        orElse: () => surah,
                       );
+                      if (prevSurah.number != surah.number) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SurahReaderScreen(surah: prevSurah, allSurahs: widget.allSurahs),
+                          ),
+                        );
+                      }
                     }
-                  }
-                : null,
-            icon: const Icon(Icons.skip_previous_rounded),
-          ),
-          IconButton(
-            tooltip: languageCode == 'ar' ? 'السورة التالية' : 'Next surah',
-            onPressed: surah.number < 114
-                ? () {
-                    final nextSurah = widget.allSurahs.firstWhere(
-                      (s) => s.number == surah.number + 1,
-                      orElse: () => surah,
-                    );
-                    if (nextSurah.number != surah.number) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => SurahReaderScreen(surah: nextSurah, allSurahs: widget.allSurahs),
-                        ),
+                  : null,
+              icon: const Icon(Icons.skip_previous_rounded),
+            ),
+            IconButton(
+              tooltip: languageCode == 'ar' ? 'السورة التالية' : 'Next surah',
+              onPressed: surah.number < 114
+                  ? () {
+                      final nextSurah = widget.allSurahs.firstWhere(
+                        (s) => s.number == surah.number + 1,
+                        orElse: () => surah,
                       );
+                      if (nextSurah.number != surah.number) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SurahReaderScreen(surah: nextSurah, allSurahs: widget.allSurahs),
+                          ),
+                        );
+                      }
                     }
-                  }
-                : null,
+                  : null,
             icon: const Icon(Icons.skip_next_rounded),
-          ),
-          _DownloadButton(surah: surah, allSurahs: widget.allSurahs),
-          IconButton(
-            tooltip: l10n.quranViewAsMushafPageTooltip,
-            onPressed: _openMushafView,
-            icon: const Icon(Icons.import_contacts_outlined),
-          ),
-          PopupMenuButton<String>(
-            tooltip: l10n.navMore,
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'reciter') {
-                _pickReciter();
-              } else if (value == 'fontDec') {
-                setState(() => _fontScale = (_fontScale - 0.1).clamp(0.7, 1.6));
-              } else if (value == 'fontInc') {
-                setState(() => _fontScale = (_fontScale + 0.1).clamp(0.7, 1.6));
-              } else if (value == 'wird') {
-                _markSurahReadToday();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'reciter',
-                child: Row(children: [
-                  const Icon(Icons.record_voice_over_outlined, size: 20),
-                  const SizedBox(width: 10),
-                  Flexible(child: Text(l10n.quranChooseReciterTooltip(Reciters.byId(appSettings.reciterId).displayNameFor(languageCode)))),
-                ]),
-              ),
-              PopupMenuItem(
-                value: 'fontDec',
-                child: Row(children: [
-                  const Icon(Icons.text_decrease, size: 20),
-                  const SizedBox(width: 10),
-                  Text(l10n.quranDecreaseFontTooltip),
-                ]),
-              ),
-              PopupMenuItem(
-                value: 'fontInc',
-                child: Row(children: [
-                  const Icon(Icons.text_increase, size: 20),
-                  const SizedBox(width: 10),
-                  Text(l10n.quranIncreaseFontTooltip),
-                ]),
-              ),
-              PopupMenuItem(
-                value: 'wird',
-                child: Row(children: [
-                  const Icon(Icons.playlist_add_check, size: 20),
-                  const SizedBox(width: 10),
-                  Text(l10n.quranAddToWirdTooltip),
-                ]),
-              ),
-            ],
-          ),
+            ),
+            _DownloadButton(surah: surah, allSurahs: widget.allSurahs),
+            IconButton(
+              tooltip: l10n.quranViewAsMushafPageTooltip,
+              onPressed: _openMushafView,
+              icon: const Icon(Icons.import_contacts_outlined),
+            ),
+            PopupMenuButton<String>(
+              tooltip: l10n.navMore,
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'reciter') {
+                  _pickReciter();
+                } else if (value == 'fontDec') {
+                  setState(() => _fontScale = (_fontScale - 0.1).clamp(0.7, 1.6));
+                } else if (value == 'fontInc') {
+                  setState(() => _fontScale = (_fontScale + 0.1).clamp(0.7, 1.6));
+                } else if (value == 'wird') {
+                  _markSurahReadToday();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 'reciter', child: Row(children: [const Icon(Icons.record_voice_over_outlined, size: 20), const SizedBox(width: 10), Flexible(child: Text(l10n.quranChooseReciterTooltip(Reciters.byId(appSettings.reciterId).displayNameFor(languageCode))))])),
+                PopupMenuItem(value: 'fontDec', child: Row(children: [const Icon(Icons.text_decrease, size: 20), const SizedBox(width: 10), Text(l10n.quranDecreaseFontTooltip)])),
+                PopupMenuItem(value: 'fontInc', child: Row(children: [const Icon(Icons.text_increase, size: 20), const SizedBox(width: 10), Text(l10n.quranIncreaseFontTooltip)])),
+                PopupMenuItem(value: 'wird', child: Row(children: [const Icon(Icons.playlist_add_check, size: 20), const SizedBox(width: 10), Text(l10n.quranAddToWirdTooltip)])),
+              ],
+            ),
+          ] else ...[
+            _DownloadButton(surah: surah, allSurahs: widget.allSurahs),
+            PopupMenuButton<String>(
+              tooltip: l10n.navMore,
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'prev' && surah.number > 1) {
+                  final prevSurah = widget.allSurahs.firstWhere((s) => s.number == surah.number - 1, orElse: () => surah);
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SurahReaderScreen(surah: prevSurah, allSurahs: widget.allSurahs)));
+                } else if (value == 'next' && surah.number < 114) {
+                  final nextSurah = widget.allSurahs.firstWhere((s) => s.number == surah.number + 1, orElse: () => surah);
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SurahReaderScreen(surah: nextSurah, allSurahs: widget.allSurahs)));
+                } else if (value == 'mushaf') {
+                  _openMushafView();
+                } else if (value == 'reciter') {
+                  _pickReciter();
+                } else if (value == 'fontDec') {
+                  setState(() => _fontScale = (_fontScale - 0.1).clamp(0.7, 1.6));
+                } else if (value == 'fontInc') {
+                  setState(() => _fontScale = (_fontScale + 0.1).clamp(0.7, 1.6));
+                } else if (value == 'wird') {
+                  _markSurahReadToday();
+                }
+              },
+              itemBuilder: (context) => [
+                if (surah.number > 1) PopupMenuItem(value: 'prev', child: Text(languageCode == 'ar' ? 'السورة السابقة' : 'Previous surah')),
+                if (surah.number < 114) PopupMenuItem(value: 'next', child: Text(languageCode == 'ar' ? 'السورة التالية' : 'Next surah')),
+                PopupMenuItem(value: 'mushaf', child: Text(l10n.quranViewAsMushafPageTooltip)),
+                PopupMenuItem(value: 'reciter', child: Text(l10n.quranChooseReciterTooltip(Reciters.byId(appSettings.reciterId).displayNameFor(languageCode)))),
+                PopupMenuItem(value: 'fontDec', child: Text(l10n.quranDecreaseFontTooltip)),
+                PopupMenuItem(value: 'fontInc', child: Text(l10n.quranIncreaseFontTooltip)),
+                PopupMenuItem(value: 'wird', child: Text(l10n.quranAddToWirdTooltip)),
+              ],
+            ),
+          ],
         ],
       ),
       bottomNavigationBar: const QuranPlaybackBar(),
       body: ListView.builder(
         controller: _scrollController,
+        cacheExtent: 1000000,
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         itemCount: surah.ayahs.length + 1,
         itemBuilder: (context, index) {

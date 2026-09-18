@@ -1,0 +1,74 @@
+FILE MAPPING GUIDE - Wirdi v3.0.0
+
+Copy these files from personal_files to the corresponding locations:
+
+1. WIRDI_v3_FINAL_MAIN_COMPLETE.dart
+   → lib/main.dart
+
+2. WIRDI_ADVANCED_KHATMA_SYSTEM.dart
+   → lib/screens/advanced_khatma_screen.dart
+
+3. WIRDI_TAJWEED_COMPLETE_IMPLEMENTATION.dart
+   → lib/screens/tajweed_quran_screen.dart
+
+4. WIRDI_MEMORIZATION_MODE_COMPLETE.dart
+   → lib/screens/memorization_screen.dart
+
+5. WIRDI_HOME_WIDGETS_COMPLETE_UI.dart
+   → lib/screens/home_widgets_screens.dart
+
+6. WIRDI_REMAINING_8_SCREENS_COMPLETE_UI.dart
+   → lib/screens/advanced_features_screens.dart
+
+7. WIRDI_REMAINING_10_FEATURES_COMPLETE.dart
+   → lib/providers/advanced_features_providers.dart
+
+8. WIRDI_PHASE2_DAILY_WIRD_SCREEN.dart
+   → lib/screens/daily_wird_screen.dart
+
+9. WIRDI_PHASE2_DAILY_WIRD_PROVIDER.dart
+   → lib/providers/daily_wird_provider.dart
+
+10. WIRDI_PHASE2_DAILY_WIRD_MODEL.dart
+    → lib/models/daily_wird_model.dart
+
+11. WIRDI_PHASE2_DAILY_WIRD_SERVICE.dart
+    → lib/services/daily_wird_service.dart
+
+12. WIRDI_PHASE2_INSIGHTS_SCREEN.dart
+    → lib/screens/insights_screen.dart
+
+13. WIRDI_PHASE2_INSIGHTS_PROVIDER.dart
+    → lib/providers/insights_provider.dart
+
+14. WIRDI_PHASE2_INSIGHTS_MODEL.dart
+    → lib/models/insights_model.dart
+
+15. WIRDI_PHASE2_INSIGHTS_SERVICE.dart
+    → lib/services/insights_service.dart
+
+16. WIRDI_PHASE2_NOTIFICATION_SETTINGS_SCREEN.dart
+    → lib/screens/notification_settings_screen.dart
+
+17. WIRDI_PHASE2_NOTIFICATION_PROVIDER.dart
+    → lib/providers/notification_provider.dart
+
+18. WIRDI_PHASE2_NOTIFICATION_MODEL.dart
+    → lib/models/notification_model.dart
+
+19. WIRDI_PHASE2_NOTIFICATION_SERVICE.dart
+    → lib/services/notification_service.dart
+
+20. WIRDI_PHASE2_DARK_THEME.dart
+    → lib/theme/dark_theme.dart
+
+21. WIRDI_PHASE2_LIGHT_THEME.dart
+    → lib/theme/light_theme.dart
+
+22. WIRDI_PHASE2_THEME_PROVIDER.dart
+    → lib/providers/theme_provider.dart
+
+23. WIRDI_PHASE2_PUBSPEC_UPDATED.yaml
+    → pubspec.yaml
+
+Total: 23 files to copy

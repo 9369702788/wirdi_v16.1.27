@@ -1,1 +1,6 @@
-// Replace with: WIRDI_PHASE2_INSIGHTS_SERVICE.dart
+// ============================================================================
+// INSIGHTS SERVICE
+// ============================================================================
+// File: WIRDI_PHASE2_INSIGHTS_SERVICE.dart
+// Location: lib/services/insights_service.dart
+// ============================================================================

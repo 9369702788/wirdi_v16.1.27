@@ -1,1 +1,6 @@
-// Replace with: WIRDI_PHASE2_DAILY_WIRD_SERVICE.dart
+// ============================================================================
+// DAILY WIRD SERVICE
+// ============================================================================
+// File: WIRDI_PHASE2_DAILY_WIRD_SERVICE.dart
+// Location: lib/services/daily_wird_service.dart
+// ============================================================================

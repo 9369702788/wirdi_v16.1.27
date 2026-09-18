@@ -1,1 +1,6 @@
-// Replace with: WIRDI_PHASE2_DAILY_WIRD_PROVIDER.dart
+// ============================================================================
+// DAILY WIRD PROVIDER
+// ============================================================================
+// File: WIRDI_PHASE2_DAILY_WIRD_PROVIDER.dart
+// Location: lib/providers/daily_wird_provider.dart
+// ============================================================================

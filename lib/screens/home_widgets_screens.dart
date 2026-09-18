@@ -1,1 +1,6 @@
-// Replace with: WIRDI_HOME_WIDGETS_COMPLETE_UI.dart
+// ============================================================================
+// HOME WIDGETS SCREENS
+// ============================================================================
+// File: WIRDI_HOME_WIDGETS_COMPLETE_UI.dart
+// Location: lib/screens/home_widgets_screens.dart
+// ============================================================================

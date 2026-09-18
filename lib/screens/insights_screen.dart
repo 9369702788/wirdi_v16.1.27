@@ -1,1 +1,6 @@
-// Replace with: WIRDI_PHASE2_INSIGHTS_SCREEN.dart
+// ============================================================================
+// INSIGHTS SCREEN
+// ============================================================================
+// File: WIRDI_PHASE2_INSIGHTS_SCREEN.dart
+// Location: lib/screens/insights_screen.dart
+// ============================================================================

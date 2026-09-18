@@ -1,1 +1,6 @@
-// Replace with: WIRDI_PHASE2_INSIGHTS_PROVIDER.dart
+// ============================================================================
+// INSIGHTS PROVIDER
+// ============================================================================
+// File: WIRDI_PHASE2_INSIGHTS_PROVIDER.dart
+// Location: lib/providers/insights_provider.dart
+// ============================================================================

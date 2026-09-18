@@ -1,1 +1,6 @@
-// Replace with: WIRDI_MEMORIZATION_MODE_COMPLETE.dart
+// ============================================================================
+// MEMORIZATION SCREEN
+// ============================================================================
+// File: WIRDI_MEMORIZATION_MODE_COMPLETE.dart
+// Location: lib/screens/memorization_screen.dart
+// ============================================================================

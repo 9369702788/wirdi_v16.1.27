@@ -1,1 +1,6 @@
-// Replace with: WIRDI_PHASE2_DAILY_WIRD_SCREEN.dart
+// ============================================================================
+// DAILY WIRD SCREEN
+// ============================================================================
+// File: WIRDI_PHASE2_DAILY_WIRD_SCREEN.dart
+// Location: lib/screens/daily_wird_screen.dart
+// ============================================================================

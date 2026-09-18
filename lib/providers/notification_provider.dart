@@ -1,1 +1,6 @@
-// Replace with: WIRDI_PHASE2_NOTIFICATION_PROVIDER.dart
+// ============================================================================
+// NOTIFICATION PROVIDER
+// ============================================================================
+// File: WIRDI_PHASE2_NOTIFICATION_PROVIDER.dart
+// Location: lib/providers/notification_provider.dart
+// ============================================================================

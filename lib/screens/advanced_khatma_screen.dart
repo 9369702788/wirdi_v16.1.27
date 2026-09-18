@@ -1,1 +1,6 @@
-// Replace with: WIRDI_ADVANCED_KHATMA_SYSTEM.dart
+// ============================================================================
+// ADVANCED KHATMA SCREEN
+// ============================================================================
+// File: WIRDI_ADVANCED_KHATMA_SYSTEM.dart
+// Location: lib/screens/advanced_khatma_screen.dart
+// ============================================================================

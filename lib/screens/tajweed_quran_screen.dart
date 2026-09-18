@@ -1,1 +1,6 @@
-// Replace with: WIRDI_TAJWEED_COMPLETE_IMPLEMENTATION.dart
+// ============================================================================
+// TAJWEED QURAN SCREEN
+// ============================================================================
+// File: WIRDI_TAJWEED_COMPLETE_IMPLEMENTATION.dart
+// Location: lib/screens/tajweed_quran_screen.dart
+// ============================================================================
